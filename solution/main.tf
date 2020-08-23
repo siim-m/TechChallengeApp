@@ -21,14 +21,6 @@ variable "acr_sku" {
   default = "basic"
 }
 
-variable "aks_vm_size" {
-  type = string
-}
-
-variable "aks_vm_count" {
-  type = number
-}
-
 variable "postgres_user" {
   type = string
 }
