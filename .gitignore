@@ -22,3 +22,11 @@ dist/
 
 # Output Binary
 TechChallengeApp
+
+# Terraform
+.terraform
+*.tfplan
+*.tfstate*
+*.tfvars
+
+
