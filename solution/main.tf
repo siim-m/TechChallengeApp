@@ -68,6 +68,7 @@ resource "azurerm_container_registry" "acr" {
 
   # Local provisioner builds the Docker image and pushes it to ACR
   provisioner "local-exec" {
+    # Ensure provisioner runs in parent directory.
     working_dir = ".."
     command     = <<EOT
       az acr login --name ${self.name}
