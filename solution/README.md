@@ -63,6 +63,8 @@ You will also need an active Azure subscription and at least Contributor access.
 - Currently, the ACR admin credentials are used for deploying the container to ACI.
   In a Production environment, it would make more sense to use an Azure AD Service
   Principal.
+- Terraform uses local state. Remote state should be configured if run from a CI/CD
+  pipeline.
 - While ACI ensures that a host machine is always available and will restart the
   container on a healthy host if one fails, there is no application-level HA or
   load balancing. This could be achieved in a number of ways, such as:
