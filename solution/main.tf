@@ -12,23 +12,29 @@ variable "prefix" {
   type = string
 }
 
+# Azure geo to deploy resources in
 variable "location" {
   type = string
 }
 
+# Sku of Azure Container Registry – basic, standard or premium
 variable "acr_sku" {
   type    = string
   default = "basic"
 }
 
+# Username of Postgres server
 variable "postgres_user" {
   type = string
 }
 
+# Password of Postgres server
 variable "postgres_password" {
   type = string
 }
 
+# Public IP address of the computer from which the deployment is run.
+# This will be whitelisted on the Postgres server to allow seeding the database.
 variable "local_public_ip" {
   type = string
 }
@@ -37,7 +43,6 @@ variable "local_public_ip" {
 
 # Using a random integer in resource names provides reasonable certainty that
 # resource names are unique (only required for certain resource types).
-
 resource "random_integer" "random" {
   min = 10000
   max = 99999
@@ -55,6 +60,7 @@ resource "azurerm_container_registry" "acr" {
   sku                 = var.acr_sku
   admin_enabled       = true
 
+  # Local provisioner builds the Docker image and pushes it to ACR
   provisioner "local-exec" {
     working_dir = ".."
     command     = <<EOT
@@ -88,6 +94,7 @@ resource "azurerm_container_group" "cg" {
 
     commands = ["./TechChallengeApp", "serve"]
 
+    # Container environment variables are used instead of conf.toml file
     environment_variables = {
       "VTT_DBHOST"     = azurerm_postgresql_server.pgsrv.fqdn
       "VTT_DBNAME"     = azurerm_postgresql_database.pgdb.name
@@ -127,6 +134,7 @@ resource "azurerm_postgresql_server" "pgsrv" {
   ssl_enforcement_enabled = false
 }
 
+# 0.0.0.0 represents Azure internal IP addresses.
 resource "azurerm_postgresql_firewall_rule" "pgfw_azure" {
   name                = "azure"
   resource_group_name = azurerm_resource_group.rg.name
@@ -135,6 +143,7 @@ resource "azurerm_postgresql_firewall_rule" "pgfw_azure" {
   end_ip_address      = "0.0.0.0"
 }
 
+# Whitelist public IP of local computer to allow preseeding of data in database.
 resource "azurerm_postgresql_firewall_rule" "pgfw_local" {
   name                = "local"
   resource_group_name = azurerm_resource_group.rg.name
@@ -150,10 +159,12 @@ resource "azurerm_postgresql_database" "pgdb" {
   charset             = "UTF8"
   collation           = "English_United States.1252"
 
+  # Explicit dependency to make sure data seeding does not run before the firewall rule is in place.
   depends_on = [
     azurerm_postgresql_firewall_rule.pgfw_local
   ]
 
+  # Provisioner runs the container locally to seed the database with data.
   provisioner "local-exec" {
     working_dir = ".."
     command     = <<EOT
