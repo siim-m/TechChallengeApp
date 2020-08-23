@@ -33,6 +33,12 @@ variable "postgres_password" {
   type = string
 }
 
+# Sku of Postgres server https://docs.microsoft.com/en-us/azure/postgresql/concepts-pricing-tiers
+variable "postgres_server_sku" {
+  type    = string
+  default = "B_Gen5_1"
+}
+
 # Public IP address of the computer from which the deployment is run.
 # This will be whitelisted on the Postgres server to allow seeding the database.
 variable "local_public_ip" {
@@ -121,7 +127,7 @@ resource "azurerm_postgresql_server" "pgsrv" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  sku_name = "B_Gen5_1"
+  sku_name = var.postgres_server_sku
 
   storage_mb                   = 5120
   backup_retention_days        = 7
